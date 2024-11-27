@@ -33,7 +33,12 @@ namespace Tomino
             gameConfig.boardView.SetBoard(board);
             gameConfig.nextPieceView.SetBoard(board);
 
+            // AirpodsInput only supported on iOS
+            #if UNITY_IOS
+            _universalInput = new UniversalInput(new KeyboardInput(), gameConfig.boardView.touchInput, new AirpodsInput());
+            #else
             _universalInput = new UniversalInput(new KeyboardInput(), gameConfig.boardView.touchInput);
+            #endif
 
             _game = new Game(board, _universalInput);
             _game.FinishedEvent += OnGameFinished;
