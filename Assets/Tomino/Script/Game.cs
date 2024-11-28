@@ -149,22 +149,20 @@ namespace Tomino
 
         private void HandlePlayerAction(PlayerAction action)
         {
-            var pieceMoved = false;
             switch (action)
             {
                 case PlayerAction.MoveLeft:
-                    pieceMoved = _board.MovePieceLeft();
+                    _board.MovePieceLeft();
                     break;
 
                 case PlayerAction.MoveRight:
-                    pieceMoved = _board.MovePieceRight();
+                    _board.MovePieceRight();
                     break;
 
                 case PlayerAction.MoveDown:
                     ResetElapsedTime();
                     if (_board.MovePieceDown())
                     {
-                        pieceMoved = true;
                         Score.PieceMovedDown();
                     }
                     else
@@ -174,12 +172,7 @@ namespace Tomino
                     break;
 
                 case PlayerAction.Rotate:
-                    var didRotate = _board.RotatePiece();
-                    if (didRotate)
-                    {
-                        PieceRotatedEvent();
-                    }
-
+                    _board.RotatePiece();
                     break;
 
                 case PlayerAction.Fall:
@@ -188,20 +181,20 @@ namespace Tomino
                     PieceFinishedFalling();
                     break;
             }
-            if (pieceMoved)
-            {
-                PieceMovedEvent();
-            }
         }
 
         private void PieceFinishedFalling()
         {
-            PieceFinishedFallingEvent();
+            _input.Cancel();
             
             // 先处理整行消除，并更新分数和等级
             var rowsCount = _board.RemoveFullRows();
-            Score.RowsCleared(rowsCount);
-            Level.RowsCleared(rowsCount);
+            if (rowsCount > 0)
+            {
+                // 更新分数和等级，但不触发声音事件
+                Score.RowsCleared(rowsCount);
+                Level.RowsCleared(rowsCount);
+            }
             
             // 等待所有方块下落完成后，再检查三消
             var matchingBlocksCount = 0;
@@ -211,6 +204,7 @@ namespace Tomino
                 matchingBlocksCount = _board.RemoveMatchingColorBlocks();
                 if (matchingBlocksCount > 0)
                 {
+                    // 更新分数和等级，但不触发声音事件
                     Score.MatchingBlocksCleared(matchingBlocksCount);
                     Level.RowsCleared(matchingBlocksCount);
                 }
