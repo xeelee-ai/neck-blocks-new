@@ -29,5 +29,10 @@ namespace Tomino.Model
         {
             Value++;
         }
+
+        public void MatchingBlocksCleared(int count)
+        {
+            Value += (count / 3) * 100;
+        }
     }
 }

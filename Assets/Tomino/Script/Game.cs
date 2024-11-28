@@ -197,9 +197,25 @@ namespace Tomino
         private void PieceFinishedFalling()
         {
             PieceFinishedFallingEvent();
+            
+            // 先处理整行消除，并更新分数和等级
             var rowsCount = _board.RemoveFullRows();
             Score.RowsCleared(rowsCount);
             Level.RowsCleared(rowsCount);
+            
+            // 等待所有方块下落完成后，再检查三消
+            var matchingBlocksCount = 0;
+            do
+            {
+                // 检查并消除匹配的三个方块，直到没有可消除的为止
+                matchingBlocksCount = _board.RemoveMatchingColorBlocks();
+                if (matchingBlocksCount > 0)
+                {
+                    Score.MatchingBlocksCleared(matchingBlocksCount);
+                    Level.RowsCleared(matchingBlocksCount);
+                }
+            } while (matchingBlocksCount > 0);
+            
             AddPiece();
         }
 

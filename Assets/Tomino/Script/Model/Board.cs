@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Tomino.Shared;
+using UnityEngine;
 
 namespace Tomino.Model
 {
@@ -287,6 +288,200 @@ namespace Tomino.Model
             {
                 block.MoveBy(-1, 0);
             }
+        }
+
+        public int RemoveMatchingColorBlocks()
+        {
+            var blocksRemoved = 0;
+            var matchesToRemove = new HashSet<Position>();
+            var blocksToKeep = new HashSet<Position>();  // 用于存储需要保留的方块位置
+
+            // 检查水平方向的匹配
+            for (int row = 0; row < height; row++)
+            {
+                for (int col = 0; col <= width - 3; col++)
+                {
+                    var blocks = new List<Block>();
+                    var positions = new List<Position>();
+                    
+                    // 收集连续的相同颜色方块
+                    PieceType? currentType = null;  // 使用可空类型
+                    var consecutiveCount = 0;
+                    
+                    for (int i = 0; i < 4; i++)  // 检查4个连续位置
+                    {
+                        if (col + i >= width) break;
+                        
+                        var block = GetBlock(new Position(row, col + i));
+                        if (block == null) break;
+                        
+                        if (currentType == null)
+                        {
+                            currentType = block.Type;
+                            consecutiveCount = 1;
+                        }
+                        else if (block.Type == currentType)
+                        {
+                            consecutiveCount++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                        
+                        blocks.Add(block);
+                        positions.Add(new Position(row, col + i));
+                    }
+                    
+                    // 如果找到4个连续的相同颜色方块
+                    if (consecutiveCount == 4)
+                    {
+                        // 随机保留一个方块
+                        var keepIndex = UnityEngine.Random.Range(0, 4);
+                        blocksToKeep.Add(positions[keepIndex]);
+                        
+                        // 将其他三个方块标记为要移除
+                        for (int i = 0; i < 4; i++)
+                        {
+                            if (i != keepIndex)
+                            {
+                                matchesToRemove.Add(positions[i]);
+                            }
+                        }
+                    }
+                    // 如果正好是3个连续的相同颜色方块
+                    else if (consecutiveCount == 3)
+                    {
+                        for (int i = 0; i < 3; i++)
+                        {
+                            matchesToRemove.Add(positions[i]);
+                        }
+                    }
+                }
+            }
+
+            // 检查垂直方向的匹配（类似的逻辑）
+            for (int col = 0; col < width; col++)
+            {
+                for (int row = 0; row <= height - 3; row++)
+                {
+                    var blocks = new List<Block>();
+                    var positions = new List<Position>();
+                    
+                    PieceType? currentType = null;  // 使用可空类型
+                    var consecutiveCount = 0;
+                    
+                    for (int i = 0; i < 4; i++)
+                    {
+                        if (row + i >= height) break;
+                        
+                        var block = GetBlock(new Position(row + i, col));
+                        if (block == null) break;
+                        
+                        if (currentType == null)
+                        {
+                            currentType = block.Type;
+                            consecutiveCount = 1;
+                        }
+                        else if (block.Type == currentType)
+                        {
+                            consecutiveCount++;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                        
+                        blocks.Add(block);
+                        positions.Add(new Position(row + i, col));
+                    }
+                    
+                    if (consecutiveCount == 4)
+                    {
+                        var keepIndex = UnityEngine.Random.Range(0, 4);
+                        blocksToKeep.Add(positions[keepIndex]);
+                        
+                        for (int i = 0; i < 4; i++)
+                        {
+                            if (i != keepIndex)
+                            {
+                                matchesToRemove.Add(positions[i]);
+                            }
+                        }
+                    }
+                    else if (consecutiveCount == 3)
+                    {
+                        for (int i = 0; i < 3; i++)
+                        {
+                            matchesToRemove.Add(positions[i]);
+                        }
+                    }
+                }
+            }
+
+            // 移除标记的方块，但保留需要保留的方块
+            foreach (var position in matchesToRemove)
+            {
+                if (!blocksToKeep.Contains(position))
+                {
+                    RemoveBlock(position);
+                    blocksRemoved++;
+                }
+            }
+
+            // 如果有方块被移除，让上方的方块下落
+            if (blocksRemoved > 0)
+            {
+                ApplyGravity();
+            }
+
+            return blocksRemoved;
+        }
+
+        private void ApplyGravity()
+        {
+            // 从底部开始，让方块下落填补空缺
+            for (int col = 0; col < width; col++)
+            {
+                for (int row = 0; row < height - 1; row++)
+                {
+                    if (GetBlock(new Position(row, col)) == null)
+                    {
+                        // 找到上方最近的方块
+                        for (int above = row + 1; above < height; above++)
+                        {
+                            var block = GetBlock(new Position(above, col));
+                            if (block != null)
+                            {
+                                // 移动方块
+                                RemoveBlock(new Position(above, col));
+                                PlaceBlock(block, new Position(row, col));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private Block GetBlock(Position position)
+        {
+            return Blocks.Find(block => block.Position.Equals(position));
+        }
+
+        private void RemoveBlock(Position position)
+        {
+            var block = GetBlock(position);
+            if (block != null)
+            {
+                Blocks.Remove(block);
+            }
+        }
+
+        private void PlaceBlock(Block block, Position position)
+        {
+            block.MoveTo(position);
+            Blocks.Add(block);
         }
     }
 }
