@@ -34,6 +34,19 @@ namespace Tomino.Input
         private bool _isHeadDown = false;
         private bool _isHeadUp = false;
         
+        // 加速下落相关参数
+        private const float INITIAL_DROP_INTERVAL = 0.5f;  // 初始下落间隔
+        private const float MIN_DROP_INTERVAL = 0.05f;     // 最小下落间隔
+        private const float ACCELERATION_RATE = 0.8f;      // 加速率（每次间隔缩短的比例）
+        private float _currentDropInterval;                // 当前下落间隔
+        private float _lastDropTime;                       // 上次下落时间
+        
+        // 左右移动相关参数
+        private const float MOVE_THRESHOLD_MIN = 10.0f;    // 最小倾斜阈值
+        private const float MOVE_THRESHOLD_MAX = 30.0f;    // 最大倾斜阈值
+        private const float QUICK_TILT_THRESHOLD = 8.0f;   // 快速倾斜检测阈值
+        private float _lastTiltZ;                         // 上一帧的Z轴倾斜角度
+        
         public AirpodsInput()
         {
             LogInfo("AirpodsInput constructor called");
@@ -46,6 +59,8 @@ namespace Tomino.Input
             {
                 LogError($"Failed to initialize HeadphoneMotion: {e.Message}\n{e.StackTrace}");
             }
+            _currentDropInterval = INITIAL_DROP_INTERVAL;
+            _lastDropTime = 0f;
         }
 
         private void InitializeHeadphoneMotion()
@@ -148,14 +163,28 @@ namespace Tomino.Input
 
         private void DetectActions(Vector3 angles)
         {
-            // 检测左右倾斜动作
-            if (Mathf.Abs(angles.z) > HEAD_TILT_THRESHOLD)
+            // 检测左右倾斜动作 - 改进的版本
+            float tiltDelta = Mathf.Abs(angles.z - _lastTiltZ);
+            float absTilt = Mathf.Abs(angles.z);
+            
+            if (absTilt > MOVE_THRESHOLD_MIN)
             {
-                string direction = angles.z > 0 ? "左" : "右";
-                _playerAction = angles.z > 0 ? PlayerAction.MoveLeft : PlayerAction.MoveRight;
-                _lastActionTime = Time.time;
-                LogInfo($"检测到向{direction}倾斜 ({angles.z:F1}°) - 触发{_playerAction}动作");
+                // 快速倾斜检测
+                if (tiltDelta > QUICK_TILT_THRESHOLD)
+                {
+                    _playerAction = angles.z > 0 ? PlayerAction.MoveLeft : PlayerAction.MoveRight;
+                    _lastActionTime = Time.time;
+                    LogInfo($"检测到快速{(angles.z > 0 ? "左" : "右")}倾斜 ({angles.z:F1}°, Δ{tiltDelta:F1}°)");
+                }
+                // 持续倾斜检测
+                else if (absTilt > MOVE_THRESHOLD_MAX && Time.time - _lastActionTime >= MIN_ACTION_INTERVAL)
+                {
+                    _playerAction = angles.z > 0 ? PlayerAction.MoveLeft : PlayerAction.MoveRight;
+                    _lastActionTime = Time.time;
+                    LogInfo($"检测到持续{(angles.z > 0 ? "左" : "右")}倾斜 ({angles.z:F1}°)");
+                }
             }
+            _lastTiltZ = angles.z;
 
             // 检测抬头动作（变形）
             if (angles.x < -HEAD_NOD_THRESHOLD)
@@ -179,25 +208,34 @@ namespace Tomino.Input
                 _isHeadUp = false;
             }
             
-            // 检测持续低头动作（加速）
+            // 检测持续低头动作（渐进加速）
             if (angles.x > HEAD_NOD_THRESHOLD)
             {
                 if (!_isHeadDown)
                 {
                     _isHeadDown = true;
                     _headDownStartTime = Time.time;
+                    _currentDropInterval = INITIAL_DROP_INTERVAL;
                     LogInfo($"开始检测低头动作 ({angles.x:F1}°)");
                 }
-                else if (Time.time - _headDownStartTime >= HEAD_DOWN_DURATION_THRESHOLD)
+                else if (Time.time - _lastDropTime >= _currentDropInterval)
                 {
                     _playerAction = PlayerAction.MoveDown;
-                    _lastActionTime = Time.time;
-                    LogInfo($"检测到持续低头 ({angles.x:F1}°) 超过 {HEAD_DOWN_DURATION_THRESHOLD}秒 - 触发加速下落动作");
+                    _lastDropTime = Time.time;
+                    
+                    // 逐步减少下落间隔，产生加速效果
+                    _currentDropInterval = Mathf.Max(
+                        MIN_DROP_INTERVAL,
+                        _currentDropInterval * ACCELERATION_RATE
+                    );
+                    
+                    LogInfo($"加速下落 - 当前间隔: {_currentDropInterval:F3}秒");
                 }
             }
             else
             {
                 _isHeadDown = false;
+                _currentDropInterval = INITIAL_DROP_INTERVAL;
             }
 
             // 记录角度变化

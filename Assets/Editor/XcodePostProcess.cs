@@ -30,10 +30,6 @@ public class XcodePostProcess
             // 设置 .mm 文件的编译标志
             proj.AddBuildProperty(target, "OTHER_LDFLAGS", "-ObjC");
 
-            // 设置开发版本的日志级别
-            proj.AddBuildProperty(target, "OTHER_CFLAGS", "-DDEBUG=1");
-            proj.AddBuildProperty(target, "GCC_PREPROCESSOR_DEFINITIONS", "DEBUG=1");
-
             // 更新 Info.plist
             string plistPath = buildPath + "/Info.plist";
             PlistDocument plist = new PlistDocument();
@@ -43,9 +39,6 @@ public class XcodePostProcess
             var rootDict = plist.root;
             rootDict.SetString("NSMotionUsageDescription", 
                 "Uses Airpods motion data to control the game");
-            rootDict.SetString("NSCameraUsageDescription", 
-                "Camera access is required for face tracking");
-
 
             // 保存更改
             File.WriteAllText(plistPath, plist.WriteToString());
