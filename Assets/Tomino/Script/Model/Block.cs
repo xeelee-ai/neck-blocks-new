@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace Tomino.Model
 {
     /// <summary>
@@ -14,6 +16,11 @@ namespace Tomino.Model
         /// The position of the block.
         /// </summary>
         public Position Position { get; private set; }
+
+        /// <summary>
+        /// The color of the block.
+        /// </summary>
+        public Color Color { get; set; }
 
         /// <summary>
         /// Creates a block with specified position and type.

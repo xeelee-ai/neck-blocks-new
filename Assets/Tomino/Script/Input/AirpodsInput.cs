@@ -37,16 +37,20 @@ namespace Tomino.Input
         // 加速下落相关参数
         private const float INITIAL_DROP_INTERVAL = 0.5f;  // 初始下落间隔
         private const float MIN_DROP_INTERVAL = 0.05f;     // 最小下落间隔
-        private const float ACCELERATION_RATE = 0.8f;      // 加速率（每次间隔缩短的比例）
+        private const float ACCELERATION_RATE = 0.4f;      // 加速率（每次间隔缩短的比例）
         private float _currentDropInterval;                // 当前下落间隔
         private float _lastDropTime;                       // 上次下落时间
         
         // 左右移动相关参数
-        private const float MOVE_THRESHOLD_MIN = 10.0f;    // 最小倾斜阈值
-        private const float MOVE_THRESHOLD_MAX = 30.0f;    // 最大倾斜阈值
-        private const float QUICK_TILT_THRESHOLD = 8.0f;   // 快速倾斜检测阈值
+        private const float MOVE_THRESHOLD_MIN = 8.0f;     // 降低最小倾斜阈值 (原为10.0f)
+        private const float MOVE_THRESHOLD_MAX = 25.0f;    // 降低最大倾斜阈值 (原为30.0f)
+        private const float QUICK_TILT_THRESHOLD = 5.0f;   // 降低快速倾斜检测阈值 (原为8.0f)
+        private const float CONTINUOUS_MOVE_INTERVAL = 0.15f; // 连续移动的时间间隔
+        private float _lastMoveTime;                       // 上次移动的时间
         private float _lastTiltZ;                         // 上一帧的Z轴倾斜角度
-        
+        private bool _isMoving;                           // 是否正在移动
+        private PlayerAction? _lastMoveAction;            // 上一次的移动动作
+
         public AirpodsInput()
         {
             LogInfo("AirpodsInput constructor called");
@@ -163,27 +167,50 @@ namespace Tomino.Input
 
         private void DetectActions(Vector3 angles)
         {
-            // 检测左右倾斜动作 - 改进的版本
+            // 检测左右倾斜动作
             float tiltDelta = Mathf.Abs(angles.z - _lastTiltZ);
             float absTilt = Mathf.Abs(angles.z);
             
             if (absTilt > MOVE_THRESHOLD_MIN)
             {
+                PlayerAction moveAction = angles.z > 0 ? PlayerAction.MoveLeft : PlayerAction.MoveRight;
+                float timeSinceLastMove = Time.time - _lastMoveTime;
+
                 // 快速倾斜检测
                 if (tiltDelta > QUICK_TILT_THRESHOLD)
                 {
-                    _playerAction = angles.z > 0 ? PlayerAction.MoveLeft : PlayerAction.MoveRight;
-                    _lastActionTime = Time.time;
+                    // 重置下落速度
+                    ResetDropSpeed();
+                    
+                    _playerAction = moveAction;
+                    _lastMoveTime = Time.time;
+                    _isMoving = true;
+                    _lastMoveAction = moveAction;
                     LogInfo($"检测到快速{(angles.z > 0 ? "左" : "右")}倾斜 ({angles.z:F1}°, Δ{tiltDelta:F1}°)");
                 }
                 // 持续倾斜检测
-                else if (absTilt > MOVE_THRESHOLD_MAX && Time.time - _lastActionTime >= MIN_ACTION_INTERVAL)
+                else if (absTilt > MOVE_THRESHOLD_MAX || 
+                        (_isMoving && timeSinceLastMove >= CONTINUOUS_MOVE_INTERVAL && 
+                         moveAction == _lastMoveAction))
                 {
-                    _playerAction = angles.z > 0 ? PlayerAction.MoveLeft : PlayerAction.MoveRight;
-                    _lastActionTime = Time.time;
-                    LogInfo($"检测到持续{(angles.z > 0 ? "左" : "右")}倾斜 ({angles.z:F1}°)");
+                    if (timeSinceLastMove >= CONTINUOUS_MOVE_INTERVAL)
+                    {
+                        // 重置下落速度
+                        ResetDropSpeed();
+                        
+                        _playerAction = moveAction;
+                        _lastMoveTime = Time.time;
+                        _lastMoveAction = moveAction;
+                        LogInfo($"检测到持续{(angles.z > 0 ? "左" : "右")}倾斜 ({angles.z:F1}°)");
+                    }
                 }
             }
+            else
+            {
+                _isMoving = false;
+                _lastMoveAction = null;
+            }
+            
             _lastTiltZ = angles.z;
 
             // 检测抬头动作（变形）
@@ -197,6 +224,9 @@ namespace Tomino.Input
                 }
                 else if (Time.time - _headUpStartTime >= HEAD_UP_DURATION_THRESHOLD)
                 {
+                    // 重置下落速度
+                    ResetDropSpeed();
+                    
                     _playerAction = PlayerAction.Rotate;
                     _lastActionTime = Time.time;
                     LogInfo($"检测到持续抬头 ({angles.x:F1}°) 超过 {HEAD_UP_DURATION_THRESHOLD}秒 - 触发变形动作");
@@ -234,8 +264,13 @@ namespace Tomino.Input
             }
             else
             {
+                if (_isHeadDown)
+                {
+                    LogInfo("停止低头动作 - 重置下落速度");
+                }
                 _isHeadDown = false;
                 _currentDropInterval = INITIAL_DROP_INTERVAL;
+                _lastDropTime = 0f;
             }
 
             // 记录角度变化
@@ -274,6 +309,19 @@ namespace Tomino.Input
             // HeadphoneMotion 插件会通过回调自动更新
         }
 
+        public void Reset()
+        {
+            // 重置所有状态
+            _isHeadDown = false;
+            _currentDropInterval = INITIAL_DROP_INTERVAL;
+            _lastDropTime = 0f;
+            _headDownStartTime = -1f;
+            _isMoving = false;
+            _lastMoveAction = null;
+            _lastMoveTime = 0f;
+            LogInfo("重置所有状态");
+        }
+
         public void Cancel()
         {
             _playerAction = null;
@@ -305,6 +353,15 @@ namespace Tomino.Input
         private void LogError(string message)
         {
             Debug.LogError($"{LOG_TAG} {message}");
+        }
+
+        // 添加一个新的辅助方法来重置下落速度
+        private void ResetDropSpeed()
+        {
+            _currentDropInterval = INITIAL_DROP_INTERVAL;
+            _lastDropTime = 0f;
+            _isHeadDown = false;
+            LogInfo("由于其他动作，重置下落速度");
         }
     }
 }

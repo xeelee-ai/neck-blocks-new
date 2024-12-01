@@ -7,5 +7,6 @@ namespace Tomino.Input
         PlayerAction? GetPlayerAction();
         void Update();
         void Cancel();
+        void Reset();
     }
 }

@@ -100,10 +100,19 @@ namespace Tomino
         private void AddPiece()
         {
             _board.AddPiece();
-            if (!_board.HasCollisions()) return;
-
-            _isPlaying = false;
-            FinishedEvent();
+            _board.CurrentPiece.SetColor(BlockColors.GetRandomColor());
+            
+            if (!_board.HasCollisions())
+            {
+                ResetElapsedTime();
+                _input?.Cancel();
+                _input?.Reset();
+            }
+            else
+            {
+                _isPlaying = false;
+                FinishedEvent();
+            }
         }
 
         /// <summary>
@@ -191,7 +200,6 @@ namespace Tomino
             var rowsCount = _board.RemoveFullRows();
             if (rowsCount > 0)
             {
-                // 更新分数和等级，但不触发声音事件
                 Score.RowsCleared(rowsCount);
                 Level.RowsCleared(rowsCount);
             }
@@ -200,11 +208,9 @@ namespace Tomino
             var matchingBlocksCount = 0;
             do
             {
-                // 检查并消除匹配的三个方块，直到没有可消除的为止
                 matchingBlocksCount = _board.RemoveMatchingColorBlocks();
                 if (matchingBlocksCount > 0)
                 {
-                    // 更新分数和等级，但不触发声音事件
                     Score.MatchingBlocksCleared(matchingBlocksCount);
                     Level.RowsCleared(matchingBlocksCount);
                 }

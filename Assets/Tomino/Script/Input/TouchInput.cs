@@ -121,5 +121,10 @@ namespace Tomino.Input
         {
             return offset > 0 ? PlayerAction.MoveRight : PlayerAction.MoveLeft;
         }
+
+        public void Reset()
+        {
+            // 触摸输入不需要特殊的重置逻辑
+        }
     }
 }

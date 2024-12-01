@@ -73,5 +73,10 @@ namespace Tomino.Input
             _nextRepeatedKeyTime = Time.time + Model.Input.KeyRepeatInterval;
             return _actionForKey[_pressedKey];
         }
+
+        public void Reset()
+        {
+            // 键盘输入不需要特殊的重置逻辑
+        }
     }
 }

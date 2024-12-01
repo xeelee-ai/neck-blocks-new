@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Tomino.Shared;
+using UnityEngine;
 
 namespace Tomino.Model
 {
@@ -23,6 +24,11 @@ namespace Tomino.Model
         /// The type of the piece.
         /// </summary>
         public PieceType Type { get; private set; }
+
+        /// <summary>
+        /// The color of the piece.
+        /// </summary>
+        public Color Color { get; private set; }
 
         /// <summary>
         /// Returns number of columns occupied by this piece.
@@ -69,6 +75,20 @@ namespace Tomino.Model
                 positions[block] = block.Position;
             }
             return positions;
+        }
+
+        /// <summary>
+        /// Sets the color of the piece.
+        /// </summary>
+        /// <param name="color">The color to set.</param>
+        public void SetColor(Color color)
+        {
+            Color = color;
+            // 为piece中的所有方块设置颜色
+            foreach (var block in blocks)
+            {
+                block.Color = color;
+            }
         }
     }
 }

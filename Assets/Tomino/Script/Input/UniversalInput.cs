@@ -34,5 +34,13 @@ namespace Tomino.Input
             }
             return null;
         }
+
+        public void Reset()
+        {
+            foreach (var input in _inputs)
+            {
+                input.Reset();
+            }
+        }
     }
 }

@@ -106,7 +106,12 @@ namespace Tomino.Model
         /// </summary>
         public void AddPiece()
         {
+            // 获取新的 Piece
             Piece = _pieceProvider.GetPiece();
+            // 设置当前方块引用
+            CurrentPiece = Piece;
+            // 设置随机颜色
+            CurrentPiece.SetColor(BlockColors.GetRandomColor());
 
             var offsetRow = Top - Piece.Top;
             var offsetCol = (width - Piece.Width) / 2;
@@ -483,5 +488,8 @@ namespace Tomino.Model
             block.MoveTo(position);
             Blocks.Add(block);
         }
+
+        // 添加 CurrentPiece 属性
+        public Piece CurrentPiece { get; private set; }
     }
 }

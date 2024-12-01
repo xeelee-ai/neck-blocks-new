@@ -43,7 +43,7 @@ namespace Tomino.View
         {
             foreach (var block in _gameBoard.Blocks)
             {
-                RenderBlock(blockSprite, block.Position, BlockColor(block.Type), Layer.Blocks);
+                RenderBlock(block);
             }
         }
 
@@ -51,17 +51,21 @@ namespace Tomino.View
         {
             foreach (var position in _gameBoard.GetPieceShadow())
             {
-                RenderBlock(shadowBlockSprite, position, themeProvider.currentTheme.blockShadowColor, Layer.PieceShadow);
+                var view = _blockViewPool.GetAndActivate();
+                view.SetSprite(shadowBlockSprite);
+                view.SetSize(BlockSize());
+                view.SetColor(themeProvider.currentTheme.blockShadowColor);
+                view.SetPosition(BlockPosition(position.Row, position.Column, Layer.PieceShadow));
             }
         }
 
-        private void RenderBlock(Sprite sprite, Position position, Color color, Layer layer)
+        private void RenderBlock(Block block)
         {
             var view = _blockViewPool.GetAndActivate();
-            view.SetSprite(sprite);
+            view.SetSprite(blockSprite);
             view.SetSize(BlockSize());
-            view.SetColor(color);
-            view.SetPosition(BlockPosition(position.Row, position.Column, layer));
+            view.SetColor(block.Color);
+            view.SetPosition(BlockPosition(block.Position.Row, block.Position.Column, Layer.Blocks));
         }
 
         internal void Awake()
@@ -99,11 +103,6 @@ namespace Tomino.View
         {
             var boardWidth = _rectTransform.rect.size.x;
             return boardWidth / _gameBoard.width;
-        }
-
-        private Color BlockColor(PieceType type)
-        {
-            return themeProvider.currentTheme.BlockColors[(int)type];
         }
 
         private Vector3 PivotOffset()
