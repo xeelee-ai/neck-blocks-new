@@ -62,9 +62,7 @@ namespace Tomino.View
         private void RenderBlock(Block block)
         {
             var view = _blockViewPool.GetAndActivate();
-            view.SetSprite(blockSprite);
-            view.SetSize(BlockSize());
-            view.SetColor(block.Color);
+            UpdateBlockView(block, view);
             view.SetPosition(BlockPosition(block.Position.Row, block.Position.Column, Layer.Blocks));
         }
 
@@ -110,6 +108,14 @@ namespace Tomino.View
             var pivot = _rectTransform.pivot;
             var boardSize = _rectTransform.rect.size;
             return new Vector3(boardSize.x * pivot.x, boardSize.y * pivot.y);
+        }
+
+        private void UpdateBlockView(Block block, BlockView blockView)
+        {
+            blockView.SetSprite(blockSprite);
+            blockView.SetSize(BlockSize());
+            blockView.SetColor(block.Color);
+            blockView.SetPosition(BlockPosition(block.Position.Row, block.Position.Column, Layer.Blocks));
         }
     }
 }

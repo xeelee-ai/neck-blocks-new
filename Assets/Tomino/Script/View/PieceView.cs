@@ -93,7 +93,7 @@ namespace Tomino.View
 
         private Color BlockColor(PieceType type)
         {
-            return themeProvider.currentTheme.BlockColors[(int)type];
+            return BlockColors.GetColorForPieceType(type);
         }
     }
 }

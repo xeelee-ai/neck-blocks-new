@@ -22,6 +22,8 @@ namespace Tomino
         {
             Application.targetFrameRate = 60;
 
+            BlockColors.Initialize(gameConfig.boardView.themeProvider.currentTheme);
+            
             HandlePlayerSettings();
             Settings.changedEvent += HandlePlayerSettings;
         }
