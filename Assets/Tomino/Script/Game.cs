@@ -100,7 +100,7 @@ namespace Tomino
         private void AddPiece()
         {
             _board.AddPiece();
-            _board.CurrentPiece.SetColor(BlockColors.GetRandomColor());
+            _board.CurrentPiece.SetColor(BlockColors.GetColorForPieceType(_board.CurrentPiece.Type));
             
             if (!_board.HasCollisions())
             {

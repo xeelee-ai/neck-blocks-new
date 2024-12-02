@@ -4,17 +4,20 @@ namespace Tomino.Model
 {
     public static class BlockColors
     {
-        // 更鲜艳的颜色配置
-        public static readonly Color[] Colors = new Color[]
-        {
-            new Color(1.0f, 0.1f, 0.1f),      // 亮红色
-            new Color(0.1f, 1.0f, 0.1f),      // 亮绿色
-            new Color(0.1f, 0.1f, 1.0f),      // 亮蓝色
-            new Color(1.0f, 1.0f, 0.1f),      // 亮黄色
-            new Color(1.0f, 0.1f, 1.0f),      // 亮紫色
-            new Color(0.1f, 1.0f, 1.0f),      // 亮青色
-            new Color(1.0f, 0.5f, 0.0f)       // 亮橙色
+        private static readonly Color[] Colors = {
+            new Color(1.0f, 0.85f, 0.0f),  // O - 黄色
+            new Color(0.8f, 0.0f, 0.8f),   // T - 紫色
+            new Color(0.0f, 0.8f, 0.0f),   // S - 绿色
+            new Color(0.8f, 0.0f, 0.0f),   // Z - 红色
+            new Color(0.0f, 0.0f, 0.8f),   // J - 蓝色
+            new Color(1.0f, 0.5f, 0.0f),   // L - 橙色
+            new Color(0.0f, 0.8f, 0.8f)    // I - 青色
         };
+
+        public static Color GetColorForPieceType(PieceType type)
+        {
+            return Colors[(int)type];
+        }
 
         public static Color GetRandomColor()
         {
