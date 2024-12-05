@@ -27,7 +27,8 @@
 //------------------------------------------------------------------------------
 
 #import <CoreMotion/CoreMotion.h>
-#import "UnityAppController.h"
+// #import "UnityAppController.h"
+#import <UIKit/UIKit.h>
 
 // Delegates
 @protocol HeadphoneConnectionDelegate <NSObject>
