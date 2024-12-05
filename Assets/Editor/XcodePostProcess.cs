@@ -40,6 +40,12 @@ public class XcodePostProcess
             rootDict.SetString("NSMotionUsageDescription", 
                 "Uses Airpods motion data to control the game");
 
+            // 修改 Info.plist 中的 Bundle display name
+            rootDict.SetString("CFBundleDisplayName", "Neck Blocks");
+
+            // 修改 Info.plist 中的 Bundle identifier
+            rootDict.SetString("CFBundleIdentifier", "ai.xeelee.neckblocks");
+
             // 保存更改
             File.WriteAllText(plistPath, plist.WriteToString());
             proj.WriteToFile(projPath);
