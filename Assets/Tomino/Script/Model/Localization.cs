@@ -22,54 +22,123 @@ namespace Tomino.Model
         public const string SummerTheme = "theme-summer";
         public const string TealTheme = "theme-teal";
         public const string Close = "close";
+        public const string Language = "language";
     }
 
     [CreateAssetMenu(fileName = "Localization", menuName = "Tomino/Localization", order = 3)]
     public class Localization : ScriptableObject
     {
-        public string nextPiece = "next";
-        public string score = "score";
-        public string lines = "lines";
-        public string level = "level";
-        public string gameFinished = "GAME FINISHED";
-        public string gamePaused = "GAME PAUSED";
-        public string playAgain = "PLAY AGAIN";
-        public string resume = "RESUME";
-        public string newGame = "NEW GAME";
-        public string settings = "SETTINGS";
-        public string music = "MUSIC";
-        public string screenButtons = "SCREEN BUTTONS";
-        public string theme = "THEME";
-        public string defaultTheme = "DEFAULT";
-        public string autumnTheme = "AUTUMN";
-        public string summerTheme = "SUMMER";
-        public string tealTheme = "TEAL";
-        public string close = "CLOSE";
+        public SystemLanguage currentLanguage = SystemLanguage.English;
+
+        private readonly string[] englishTexts = {
+            "NEXT",
+            "SCORE",
+            "LINES",
+            "LEVEL",
+            "GAME FINISHED",
+            "GAME PAUSED",
+            "PLAY AGAIN",
+            "RESUME",
+            "NEW GAME",
+            "SETTINGS",
+            "MUSIC",
+            "SCREEN BUTTONS",
+            "THEME",
+            "DEFAULT",
+            "AUTUMN",
+            "SUMMER",
+            "TEAL",
+            "CLOSE"
+        };
+
+        private readonly string[] chineseTexts = {
+            "下一个",
+            "分数",
+            "行数",
+            "等级",
+            "游戏结束",
+            "游戏暂停",
+            "再玩一次",
+            "继续",
+            "新游戏",
+            "设置",
+            "音乐",
+            "屏幕按钮",
+            "主题",
+            "默认",
+            "秋季",
+            "夏季",
+            "青色",
+            "关闭"
+        };
+
+        private readonly string[] spanishTexts = {
+            "SIGUIENTE",
+            "PUNTOS",
+            "LÍNEAS",
+            "NIVEL",
+            "JUEGO TERMINADO",
+            "JUEGO PAUSADO",
+            "JUGAR DE NUEVO",
+            "CONTINUAR",
+            "NUEVO JUEGO",
+            "AJUSTES",
+            "MÚSICA",
+            "BOTONES EN PANTALLA",
+            "TEMA",
+            "PREDETERMINADO",
+            "OTOÑO",
+            "VERANO",
+            "TURQUESA",
+            "CERRAR"
+        };
 
         public string GetLocalizedTextForID(string textID)
         {
+            int index = GetTextIndex(textID);
+            if (index == -1) return "<null>";
+
+            return currentLanguage switch
+            {
+                SystemLanguage.Chinese or 
+                SystemLanguage.ChineseSimplified or 
+                SystemLanguage.ChineseTraditional => chineseTexts[index],
+                
+                SystemLanguage.Spanish => spanishTexts[index],
+                
+                _ => englishTexts[index]
+            };
+        }
+
+        private int GetTextIndex(string textID)
+        {
             return textID switch
             {
-                TextID.NextPiece => nextPiece,
-                TextID.Score => score,
-                TextID.Lines => lines,
-                TextID.Level => level,
-                TextID.GameFinished => gameFinished,
-                TextID.GamePaused => gamePaused,
-                TextID.PlayAgain => playAgain,
-                TextID.Resume => resume,
-                TextID.NewGame => newGame,
-                TextID.Settings => settings,
-                TextID.Music => music,
-                TextID.ScreenButtons => screenButtons,
-                TextID.Theme => theme,
-                TextID.DefaultTheme => defaultTheme,
-                TextID.AutumnTheme => autumnTheme,
-                TextID.SummerTheme => summerTheme,
-                TextID.TealTheme => tealTheme,
-                TextID.Close => close,
-                _ => "<null>"
+                TextID.NextPiece => 0,
+                TextID.Score => 1,
+                TextID.Lines => 2,
+                TextID.Level => 3,
+                TextID.GameFinished => 4,
+                TextID.GamePaused => 5,
+                TextID.PlayAgain => 6,
+                TextID.Resume => 7,
+                TextID.NewGame => 8,
+                TextID.Settings => 9,
+                TextID.Music => 10,
+                TextID.ScreenButtons => 11,
+                TextID.Theme => 12,
+                TextID.DefaultTheme => 13,
+                TextID.AutumnTheme => 14,
+                TextID.SummerTheme => 15,
+                TextID.TealTheme => 16,
+                TextID.Close => 17,
+                _ => -1
             };
+        }
+
+        private void OnEnable()
+        {
+            currentLanguage = Application.systemLanguage;
         }
     }
 }
