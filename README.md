@@ -6,6 +6,7 @@ This project explores mobile development environment available in the Unity engi
 
 ## Features
 - F**k apple app store
+- One more thing,one more cook,one more money,no more customer.
 - Support for Airpods controller
 - Support multiple languages
 - Complete game mechanics
