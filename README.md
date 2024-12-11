@@ -15,7 +15,8 @@ This project explores mobile development environment available in the Unity engi
 
 
 ## Screenshots
-<video controls src="qiqi.mp4" title="Title"></video>
+https://github.com/xeelee-ai/neck-blocks-new/raw/refs/heads/main/qiqi.mp4
+
 
 <table>
   <tr>
