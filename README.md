@@ -3,7 +3,9 @@
 This project explores mobile development environment available in the Unity engine.
 
 ## Features
-
+- F**k apple app store
+- Support for Airpods controller
+- Support multiple languages
 - Complete game mechanics
 - Custom UI
 - Unit tests
@@ -11,7 +13,9 @@ This project explores mobile development environment available in the Unity engi
 - Mobile design
 - Sound effects and music
 
+
 ## Screenshots
+<video controls src="qiqi.mp4" title="Title"></video>
 
 <table>
   <tr>
